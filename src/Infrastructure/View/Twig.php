@@ -29,7 +29,7 @@ class Twig
         $loader = new FilesystemLoader($basePath . '/resources/views');
 
         $twig = new Environment($loader, [
-            'cache' => $basePath . '/cache',
+            'cache' => $basePath . '/storage/cache',
             'debug' => true,
         ]);
 
