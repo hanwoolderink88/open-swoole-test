@@ -1,35 +1,19 @@
 <?php
 
-namespace User\Swoole\Infrastructure\Router;
+namespace User\Swoole\Infrastructure\Http\Routing;
 
-use Nyholm\Psr7\Request;
-use Nyholm\Psr7\Response;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
-use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Throwable;
 use User\Swoole\Infrastructure\Container\Application;
+use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\Response;
 
 class Router
 {
     private RouteCollection $routes;
-
-    private static $instance = null;
-
-    private function __construct()
-    {
-    }
-
-    public static function getInstance(): static
-    {
-        if (self::$instance == null) {
-            self::$instance = new static();
-        }
-
-        return self::$instance;
-    }
 
     public function route(Application $app): Response
     {
@@ -40,14 +24,13 @@ class Router
             $request->getMethod(),
         );
 
-        if (!isset($this->routes)) {
-            echo 'init routes' . PHP_EOL;
-            $this->initRoutes();
-        }
-
         try {
             $matcher = new UrlMatcher($this->routes, $context);
             $parameters = $matcher->match($request->getUri()->getPath());
+
+            $matcher->getContext();
+
+            $this->callMiddlewares($app, $parameters['_middleware'] ?? []);
 
             $controller = $parameters['callable'][0];
             $method = $parameters['callable'][1];
@@ -55,6 +38,7 @@ class Router
             $additionalMethodParams = $parameters;
             unset($additionalMethodParams['callable']);
             unset($additionalMethodParams['_route']);
+            unset($additionalMethodParams['_middleware']);
 
             return $app->call($controller . '@' . $method, $additionalMethodParams);
         } catch (ResourceNotFoundException) {
@@ -64,31 +48,35 @@ class Router
         }
     }
 
-    private function initRoutes(): void
+    public function initRoutes(string $basePath): void
     {
+        echo 'init routes' . PHP_EOL;
+
         $this->routes = new RouteCollection();
 
-        $addRoute = function (string $name, string $path, string $controller, string $method) {
-            $this->routes->add($name, new Route($path, ['callable' => [$controller, $method]]));
-        };
+        // used in the routes.php file
+        $router = $this;
 
-        require __DIR__ . '/../../../routes/routes.php';
+        require $basePath . '/routes/routes.php';
     }
 
-    /**
-     * @param string $name
-     * @param string $path
-     * @param array $controller
-     * @return void
-     */
-    public static function get(string $name, string $path, array $controller): void
+    public function addRoute(string $method, string $path, array $controller): Route
     {
         $route = new Route(
             path: $path,
             defaults: ['callable' => $controller],
-            methods: 'GET'
+            methods: $method,
         );
 
-        self::getInstance()->routes->add($path, $route);
+        $this->routes->add($path, $route);
+
+        return $route;
+    }
+
+    private function callMiddlewares(Application $app, array $middlewares): void
+    {
+        foreach ($middlewares as $middleware) {
+            $app->call($middleware . '@handle');
+        }
     }
 }

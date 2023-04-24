@@ -3,22 +3,23 @@
 namespace User\Swoole\Infrastructure\Swoole;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7\Request;
-use Nyholm\Psr7\Response;
+use OpenSwoole\Http\Request as SwooleRequest;
 use OpenSwoole\Http\Response as SwooleResponse;
 use OpenSwoole\HTTP\Server as SwooleServer;
 use User\Swoole\Infrastructure\Container\Application;
+use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\Response;
 
 class Helper
 {
     protected float $startTime;
 
-    public function __construct()
+    public function __construct(private string $basePath)
     {
         $this->startTime = floor(microtime(true) * 1000);
     }
 
-    public function createPrsRequest($request): Request
+    public function createRequest(SwooleRequest $request): Request
     {
         $psr17Factory = new Psr17Factory();
         $psrRequest = $psr17Factory->createRequest(
@@ -38,7 +39,7 @@ class Helper
 
         $psrRequest->getBody()->write($request->rawContent());
 
-        return $psrRequest;
+        return Request::createFromPsrRequest($psrRequest);
     }
 
     public function updateResponse(SwooleResponse $response, Response $psrResponse): void
@@ -49,7 +50,7 @@ class Helper
 
     public function handleStatic(mixed $uri, SwooleResponse $response): void
     {
-        $location = __DIR__ . '/../../../resources/' . ltrim($uri);
+        $location = $this->basePath . '/resources/' . ltrim($uri);
 
         if (file_exists($location)) {
             $file = file_get_contents($location);
@@ -81,11 +82,11 @@ class Helper
         $dev = true;
 
         if ($dev) {
-            $sha = file_exists(__DIR__ . '/../../../sha') ? file_get_contents(__DIR__ . '/../../../sha') : null;
-            $newSha = file_exists(__DIR__ . '/../../../shaNew') ? file_get_contents(__DIR__ . '/../../../shaNew') : null;
+            $sha = file_exists($this->basePath . '/sha') ? file_get_contents($this->basePath . '/sha') : null;
+            $newSha = file_exists($this->basePath . '/shaNew') ? file_get_contents($this->basePath . '/shaNew') : null;
 
             if ($sha !== $newSha) {
-                $file = fopen(__DIR__ . '/../../../sha', 'wa+');
+                $file = fopen($this->basePath . '/sha', 'wa+');
                 fwrite($file, $newSha);
 
                 $server->reload(false);
@@ -111,8 +112,8 @@ class Helper
         $request = $app->make(Request::class);
 
         return $this->getTime() . 'ms '
-        . $response->getStatusCode() . ' '
-        . $request->getMethod() . '  '
-        . $request->getUri()->getPath() . PHP_EOL;
+            . $response->getStatusCode() . ' '
+            . $request->getMethod() . '  '
+            . $request->getUri()->getPath() . PHP_EOL;
     }
 }

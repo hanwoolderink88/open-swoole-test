@@ -2,8 +2,8 @@
 
 namespace User\Swoole\Domain\Controllers;
 
-use Nyholm\Psr7\Request;
-use Nyholm\Psr7\Response;
+use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\Response;
 use User\Swoole\Infrastructure\View\Twig;
 
 class TestController
@@ -14,6 +14,7 @@ class TestController
             'path' => $request->getUri()->getPath(),
             'title' => 'Homepage',
             'image' => '/img/logo.png',
+            'user' => $request->getUser(),
         ]);
     }
 

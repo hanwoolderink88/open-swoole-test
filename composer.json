@@ -18,6 +18,7 @@
         "nyholm/psr7": "^1.6",
         "symfony/routing": "^6.2",
         "twig/twig": "^3.0",
-        "illuminate/container": "^10.8"
+        "illuminate/container": "^10.8",
+        "mtdowling/jmespath.php": "^2.6"
     }
 }

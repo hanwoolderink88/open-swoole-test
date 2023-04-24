@@ -1,12 +1,13 @@
 <?php
 
+use User\Swoole\Application\Middleware\TestMiddleware;
 use User\Swoole\Domain\Controllers\TestController;
 use User\Swoole\Domain\Controllers\UserController;
-use User\Swoole\Infrastructure\Router\Router;
+use User\Swoole\Infrastructure\Http\Routing\Router;
 
-/** @var Closure $addRoute */
+/** @var Router $router */
 
-Router::get('home', '/', [TestController::class, 'home']);
-Router::get('about', '/about', [TestController::class, 'about']);
-Router::get('users.index', '/users', [UserController::class, 'index']);
-Router::get('users.show', '/users/{userId}', [UserController::class, 'show']);
+$router->addRoute('GET', '/', [TestController::class, 'home'])->addMiddleWare(TestMiddleware::class);
+$router->addRoute('GET', '/about', [TestController::class, 'about']);
+$router->addRoute('GET', '/users', [UserController::class, 'index']);
+$router->addRoute('GET', '/users/{userId}', [UserController::class, 'show']);

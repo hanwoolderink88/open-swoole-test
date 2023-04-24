@@ -2,8 +2,8 @@
 
 namespace User\Swoole\Domain\Controllers;
 
-use Nyholm\Psr7\Request;
-use Nyholm\Psr7\Response;
+use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\Response;
 
 class UserController
 {
@@ -14,9 +14,6 @@ class UserController
 
     public function show(Request $request, string $userId): Response
     {
-        $params = [];
-        parse_str($request->getUri()->getQuery(), $params);
-
         return new Response(200, [], 'User with id: ' . $userId);
     }
 }
