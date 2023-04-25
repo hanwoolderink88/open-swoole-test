@@ -1,25 +1,25 @@
 <?php
 
-use OpenSwoole\Http\Request as SwooleRequest;
-use OpenSwoole\Http\Response as SwooleResponse;
-use OpenSwoole\HTTP\Server as SwooleServer;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
+use Swoole\HTTP\Server as SwooleServer;
 use User\Swoole\Infrastructure\Container\Application;
 use User\Swoole\Infrastructure\Http\Request\Request;
 use User\Swoole\Infrastructure\Http\Routing\Router;
 use User\Swoole\Infrastructure\Swoole\Helper;
 
-require __DIR__ . '/vendor/autoload.php';
-
-$server = new SwooleServer('127.0.0.1', 9501);
+$server = new SwooleServer('0.0.0.0', 9501);
 
 $server->on('start', function (SwooleServer $server) {
-    echo 'Server started at http://127.0.0.1:9501' . PHP_EOL;
+    echo 'Server started at http://0.0.0.0:9501' . PHP_EOL;
+});
+
+$server->on('workerStart', function (SwooleServer $server, int $workerId) {
+    require __DIR__ . '/vendor/autoload.php';
 });
 
 $server->on('request', function (SwooleRequest $request, SwooleResponse $response) use ($server) {
     $helper = new Helper(__DIR__);
-
-    $helper->shouldReload($server);
 
     $uri = $request->server['request_uri'];
 

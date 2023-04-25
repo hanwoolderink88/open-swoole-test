@@ -14,11 +14,13 @@
         }
     ],
     "require": {
-        "openswoole/core": "22.1.2",
         "nyholm/psr7": "^1.6",
         "symfony/routing": "^6.2",
         "twig/twig": "^3.0",
         "illuminate/container": "^10.8",
         "mtdowling/jmespath.php": "^2.6"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^5.0"
     }
 }

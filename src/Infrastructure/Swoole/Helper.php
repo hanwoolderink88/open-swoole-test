@@ -3,9 +3,9 @@
 namespace User\Swoole\Infrastructure\Swoole;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
-use OpenSwoole\Http\Request as SwooleRequest;
-use OpenSwoole\Http\Response as SwooleResponse;
-use OpenSwoole\HTTP\Server as SwooleServer;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
+use Swoole\HTTP\Server as SwooleServer;
 use User\Swoole\Infrastructure\Container\Application;
 use User\Swoole\Infrastructure\Http\Request\Request;
 use User\Swoole\Infrastructure\Http\Response\Response;
@@ -73,24 +73,6 @@ class Helper
         } else {
             $response->status(404);
             $response->end();
-        }
-    }
-
-    // todo: works for now, but not the best solution
-    public function shouldReload(SwooleServer $server): void
-    {
-        $dev = true;
-
-        if ($dev) {
-            $sha = file_exists($this->basePath . '/sha') ? file_get_contents($this->basePath . '/sha') : null;
-            $newSha = file_exists($this->basePath . '/shaNew') ? file_get_contents($this->basePath . '/shaNew') : null;
-
-            if ($sha !== $newSha) {
-                $file = fopen($this->basePath . '/sha', 'wa+');
-                fwrite($file, $newSha);
-
-                $server->reload(false);
-            }
         }
     }
 
