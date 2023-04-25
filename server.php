@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;

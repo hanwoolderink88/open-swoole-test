@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace User\Swoole\Infrastructure\Swoole;
 
@@ -84,7 +85,7 @@ class Helper
         return preg_match($folderRegex, $uri) || preg_match($extensionRegex, $uri);
     }
 
-    public function getTime(): int
+    public function getTime(): float
     {
         return floor(microtime(true) * 1000) - $this->startTime;
     }

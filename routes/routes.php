@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use User\Swoole\Application\Middleware\TestMiddleware;
 use User\Swoole\Domain\Controllers\TestController;
