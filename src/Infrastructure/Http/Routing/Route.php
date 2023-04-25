@@ -10,7 +10,7 @@ class Route extends SymfonyRoute
     public function addMiddleWare(string $middleware): static
     {
         $middlewares = $this->hasDefault('_middleware')
-            ? [...$this->getDefault('middleware'), $middleware]
+            ? [...$this->getDefault('_middleware'), $middleware]
             : [$middleware];
 
         $this->setDefault('_middleware', $middlewares);

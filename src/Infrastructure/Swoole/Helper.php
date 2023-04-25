@@ -9,7 +9,9 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\HTTP\Server as SwooleServer;
 use User\Swoole\Infrastructure\Container\Application;
 use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\JsonResponse;
 use User\Swoole\Infrastructure\Http\Response\Response;
+use User\Swoole\Infrastructure\Http\Response\ResponseInterface;
 
 class Helper
 {
@@ -43,7 +45,7 @@ class Helper
         return Request::createFromPsrRequest($psrRequest);
     }
 
-    public function updateResponse(SwooleResponse $response, Response $psrResponse): void
+    public function updateResponse(SwooleResponse $response, ResponseInterface $psrResponse): void
     {
         $response->header("content-type", $psrResponse->getHeader('content-type') ?? 'text/html');
         $response->end($psrResponse->getBody()->getContents());
@@ -90,7 +92,7 @@ class Helper
         return floor(microtime(true) * 1000) - $this->startTime;
     }
 
-    public function log(Application $app, Response $response): string
+    public function log(Application $app, ResponseInterface $response): string
     {
         $request = $app->make(Request::class);
 

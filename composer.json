@@ -18,7 +18,8 @@
         "symfony/routing": "^6.2",
         "twig/twig": "^3.0",
         "illuminate/container": "^10.8",
-        "mtdowling/jmespath.php": "^2.6"
+        "mtdowling/jmespath.php": "^2.6",
+        "haydenpierce/class-finder": "^0.5.1"
     },
     "require-dev": {
         "swoole/ide-helper": "^5.0"

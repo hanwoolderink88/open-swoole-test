@@ -7,6 +7,7 @@ use Swoole\HTTP\Server as SwooleServer;
 use User\Swoole\Infrastructure\Container\Application;
 use User\Swoole\Infrastructure\Http\Request\Request;
 use User\Swoole\Infrastructure\Http\Routing\Router;
+use User\Swoole\Infrastructure\Http\Routing\RouterFactory;
 use User\Swoole\Infrastructure\Swoole\Helper;
 
 $server = new SwooleServer('0.0.0.0', 9501);
@@ -34,10 +35,7 @@ $server->on('request', function (SwooleRequest $request, SwooleResponse $respons
     $app->setBasePath(__DIR__);
 
     $app->singletonIf(Router::class, function (Application $app) {
-        $router = new Router();
-        $router->initRoutes($app->getBasePath());
-
-        return $router;
+        return RouterFactory::create();
     });
 
     $app->singleton(Request::class, function (Application $app) use ($helper, $request) {

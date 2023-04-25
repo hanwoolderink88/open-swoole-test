@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+ declare(strict_types=1);
 
 namespace User\Swoole\Infrastructure\Http\Routing;
 
@@ -10,13 +10,15 @@ use Symfony\Component\Routing\RouteCollection;
 use Throwable;
 use User\Swoole\Infrastructure\Container\Application;
 use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Response\JsonResponse;
 use User\Swoole\Infrastructure\Http\Response\Response;
+use User\Swoole\Infrastructure\Http\Response\ResponseInterface;
 
 class Router
 {
     private RouteCollection $routes;
 
-    public function route(Application $app): Response
+    public function route(Application $app): ResponseInterface
     {
         $request = $app->make(Request::class);
 
@@ -43,22 +45,29 @@ class Router
 
             return $app->call($controller . '@' . $method, $additionalMethodParams);
         } catch (ResourceNotFoundException) {
-            return new Response(404, [], 'Not Found');
+            return new JsonResponse([
+                'error' => 'Not found',
+            ], 404);
         } catch (Throwable $e) {
             throw $e;
         }
     }
 
-    public function initRoutes(string $basePath): void
+    private function callMiddlewares(Application $app, array $middlewares): void
     {
-        echo 'init routes' . PHP_EOL;
+        foreach ($middlewares as $middleware) {
+            $app->call($middleware . '@handle');
+        }
+    }
 
-        $this->routes = new RouteCollection();
+    public function getRoutes(): RouteCollection
+    {
+        return $this->routes;
+    }
 
-        // used in the routes.php file
-        $router = $this;
-
-        require $basePath . '/routes/routes.php';
+    public function setRoutes(RouteCollection $routeCollection): void
+    {
+        $this->routes = $routeCollection;
     }
 
     public function addRoute(string $method, string $path, array $controller): Route
@@ -72,12 +81,5 @@ class Router
         $this->routes->add($path, $route);
 
         return $route;
-    }
-
-    private function callMiddlewares(Application $app, array $middlewares): void
-    {
-        foreach ($middlewares as $middleware) {
-            $app->call($middleware . '@handle');
-        }
     }
 }
