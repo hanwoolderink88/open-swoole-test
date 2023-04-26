@@ -14,6 +14,8 @@ class Request
 {
     private PsrRequest $request;
 
+    private mixed $body;
+
     private User $user;
 
     public function __construct(
@@ -61,11 +63,16 @@ class Request
     {
         $params = $this->request->getBody()->getContents();
 
-        if ($this->request->getHeader('Content-Type') === 'application/json') {
+        // iieuw ieuw ieuw
+        if(isset($this->body)){
+            $body = $this->body;
+        } elseif ($this->request->getHeader('Content-Type') === ['application/json']) {
             $body = json_decode($params, true);
+            $this->body = $body;
         } else {
             $body = [];
             parse_str($params, $body);
+            $this->body = $body;
         }
 
         $found = search($key, $body);

@@ -24,23 +24,12 @@ class Helper
 
     public function createRequest(SwooleRequest $request): Request
     {
-        $psr17Factory = new Psr17Factory();
-        $psrRequest = $psr17Factory->createRequest(
+        $psrRequest = new \Nyholm\Psr7\Request(
             $request->server['request_method'],
             $request->server['request_uri'] . '?' . ($request->server['query_string'] ?? ''),
+            $request->header,
+            $request->rawContent(),
         );
-
-        foreach ($request->header as $key => $value) {
-            $psrRequest = $psrRequest->withHeader($key, $value);
-        }
-
-        if (isset($request->cookie) && is_array($request->cookie)) {
-            foreach ($request->cookie as $key => $value) {
-                $psrRequest = $psrRequest->withAddedHeader('Cookie', $key . '=' . $value);
-            }
-        }
-
-        $psrRequest->getBody()->write($request->rawContent());
 
         return Request::createFromPsrRequest($psrRequest);
     }
@@ -48,6 +37,7 @@ class Helper
     public function updateResponse(SwooleResponse $response, ResponseInterface $psrResponse): void
     {
         $response->header("content-type", $psrResponse->getHeader('content-type') ?? 'text/html');
+        $response->status($psrResponse->getStatusCode());
         $response->end($psrResponse->getBody()->getContents());
     }
 

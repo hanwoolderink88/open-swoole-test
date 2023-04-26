@@ -1,14 +1,16 @@
 <?php
- declare(strict_types=1);
+declare(strict_types=1);
 
 namespace User\Swoole\Infrastructure\Http\Routing;
 
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Throwable;
 use User\Swoole\Infrastructure\Container\Application;
+use User\Swoole\Infrastructure\Http\Exceptions\HttpException;
 use User\Swoole\Infrastructure\Http\Request\Request;
 use User\Swoole\Infrastructure\Http\Response\JsonResponse;
 use User\Swoole\Infrastructure\Http\Response\Response;
@@ -45,9 +47,9 @@ class Router
 
             return $app->call($controller . '@' . $method, $additionalMethodParams);
         } catch (ResourceNotFoundException) {
-            return new JsonResponse([
-                'error' => 'Not found',
-            ], 404);
+            throw new HttpException('Route does not exist', 404);
+        } catch (MethodNotAllowedException) {
+            throw new HttpException('Method not allowed', 405);
         } catch (Throwable $e) {
             throw $e;
         }
@@ -78,7 +80,7 @@ class Router
             methods: $method,
         );
 
-        $this->routes->add($path, $route);
+        $this->routes->add($path . ':' . $method, $route);
 
         return $route;
     }
