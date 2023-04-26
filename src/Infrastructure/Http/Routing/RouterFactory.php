@@ -40,10 +40,12 @@ class RouterFactory
     {
         ClassFinder::disablePSR4Vendors();
         // todo: config..
-        $classes = ClassFinder::getClassesInNamespace('User\Swoole\Domain\Controllers', ClassFinder::RECURSIVE_MODE);
+        $contollerNamespace = 'User\Swoole\Domain\Controllers';
+        $classes = ClassFinder::getClassesInNamespace($contollerNamespace, ClassFinder::RECURSIVE_MODE);
 
         foreach ($classes as $class) {
             $reflectionClass = new ReflectionClass($class);
+            $classMiddlewares = $reflectionClass->getAttributes(MiddlewareAttribute::class);
 
             $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
@@ -60,7 +62,9 @@ class RouterFactory
 
                 $route = $this->router->addRoute($routeAttribute->method, $routeAttribute->path, $controller);
 
-                $middlewares = $method->getAttributes(MiddlewareAttribute::class);
+                $methodMiddleWares = $method->getAttributes(MiddlewareAttribute::class);
+
+                $middlewares = array_unique(array_merge($classMiddlewares, $methodMiddleWares));
 
                 foreach ($middlewares as $middleware) {
                     $middleware = $middleware->newInstance();

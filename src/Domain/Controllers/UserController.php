@@ -10,10 +10,10 @@ use User\Swoole\Infrastructure\Http\Response\Response;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Middleware;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Route;
 
+#[Middleware(AuthMiddleware::class)]
 class UserController
 {
     #[Route('/user')]
-    #[Middleware(AuthMiddleware::class)]
     public function index(): JsonResponse
     {
         return new JsonResponse([
@@ -29,7 +29,6 @@ class UserController
     }
 
     #[Route('/user/{userId}')]
-    #[Middleware(AuthMiddleware::class)]
     public function show(Request $request, string $userId): Response
     {
         return new Response(200, [

@@ -11,10 +11,10 @@ use User\Swoole\Infrastructure\Http\Routing\Attributes\Middleware;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Route;
 use User\Swoole\Infrastructure\View\Twig;
 
+#[MiddleWare(AuthMiddleware::class)]
 class TestController
 {
     #[Route('/')]
-    #[MiddleWare(AuthMiddleware::class)]
     public function home(Request $request): Response
     {
         return Twig::response('pages/home', [
@@ -25,8 +25,6 @@ class TestController
     }
 
     #[Route('/about')]
-    #[Middleware(TestMiddleware::class)]
-    #[MiddleWare(AuthMiddleware::class)]
     public function about(Request $request): Response
     {
         return Twig::response('pages/about', [
