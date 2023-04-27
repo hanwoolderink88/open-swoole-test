@@ -59,12 +59,12 @@ class Request
         return $found ?? $default;
     }
 
-    public function get(string $key, $default = null): mixed
+    public function get(string $key = null, $default = null): mixed
     {
         $params = $this->request->getBody()->getContents();
 
         // iieuw ieuw ieuw
-        if(isset($this->body)){
+        if (isset($this->body)) {
             $body = $this->body;
         } elseif ($this->request->getHeader('Content-Type') === ['application/json']) {
             $body = json_decode($params, true);
@@ -75,9 +75,29 @@ class Request
             $this->body = $body;
         }
 
+        if ($key === null) {
+            return $body;
+        }
+
         $found = search($key, $body);
 
         return $found ?? $default;
+    }
+
+    public function getPage(): int {
+        return (int) $this->query('page', 1);
+    }
+
+    public function getPerPage(): int {
+        return (int) $this->query('perPage', 20);
+    }
+
+    public function getPaginationValues(): array
+    {
+        return [
+            'page' => (int) $this->query('page', 1),
+            'perPage' => (int) $this->query('perPage', 20),
+        ];
     }
 
     public function getUser(): User

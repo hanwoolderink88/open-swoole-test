@@ -4,8 +4,9 @@ declare(strict_types=1);
 namespace User\Swoole\Domain\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
+use User\Swoole\Domain\Repositories\UserRepository;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 class User
 {

@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace User\Swoole\Infrastructure\Http\Routing;
 
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityManager;
+use HaydenPierce\ClassFinder\ClassFinder;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
@@ -19,6 +22,8 @@ use User\Swoole\Infrastructure\Http\Response\ResponseInterface;
 class Router
 {
     private RouteCollection $routes;
+
+    private array $bindingsClasses;
 
     public function route(Application $app): ResponseInterface
     {
@@ -41,9 +46,12 @@ class Router
             $method = $parameters['callable'][1];
 
             $additionalMethodParams = $parameters;
+
             unset($additionalMethodParams['callable']);
             unset($additionalMethodParams['_route']);
             unset($additionalMethodParams['_middleware']);
+
+            $this->addBindings($app, $additionalMethodParams);
 
             return $app->call($controller . '@' . $method, $additionalMethodParams);
         } catch (ResourceNotFoundException) {
@@ -83,5 +91,35 @@ class Router
         $this->routes->add($path . ':' . $method, $route);
 
         return $route;
+    }
+
+    private function addBindings(Application $app, array &$additionalMethodParams): void
+    {
+        if (!isset($this->bindingsClasses)) {
+            $this->bindingsClasses = ClassFinder::getClassesInNamespace('User\Swoole\Domain\Entities');
+        }
+
+        foreach ($additionalMethodParams as $key => $value) {
+            $found = null;
+
+            foreach ($this->bindingsClasses as $class) {
+                if (str_ends_with($class, '\\' . ucfirst($key))) {
+                    $found = $class;
+                    break;
+                }
+            }
+
+            if($found){
+                /** @var EntityManager $em */
+                $em = $app->make(EntityManager::class);
+                $entity = $em->getRepository($class)->find($value);
+
+                if(!$entity){
+                    throw new HttpException('Resource not found', 404);
+                }
+
+                $additionalMethodParams[$key] = $entity;
+            }
+        }
     }
 }

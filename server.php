@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManager;
+use Hanwoolderink\Data\Dto\Data;
+use Illuminate\Validation\ValidationException;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\HTTP\Server as SwooleServer;
@@ -50,6 +52,13 @@ $server->on('request', function (SwooleRequest $request, SwooleResponse $respons
         return $helper->createRequest($request);
     });
 
+    $app->afterResolving(Data::class, function (Data $abstract, Application $app) {
+        /** @var Request $request */
+        $request = $app->make(Request::class);
+
+        return $abstract->setData($request->get())->validate();
+    });
+
     $router = $app->make(Router::class);
 
     try {
@@ -63,6 +72,18 @@ $server->on('request', function (SwooleRequest $request, SwooleResponse $respons
             json_encode([
                 'code' => $e->getCode(),
                 'message' => $e->getMessage(),
+            ])
+        );
+    } catch (ValidationException $e) {
+        $appResponse = new Response(
+            422,
+            [
+                'Content-Type' => 'application/json',
+            ],
+            json_encode([
+                'code' => 422,
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
             ])
         );
     }

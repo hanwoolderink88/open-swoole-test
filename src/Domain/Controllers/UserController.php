@@ -5,11 +5,13 @@ namespace User\Swoole\Domain\Controllers;
 
 use Doctrine\ORM\EntityManager;
 use User\Swoole\Application\Middleware\AuthMiddleware;
+use User\Swoole\Domain\Actions\User\CreateUser;
+use User\Swoole\Domain\Data\UserCreateData;
 use User\Swoole\Domain\Entities\User;
 use User\Swoole\Domain\Transformers\UserTransformer;
 use User\Swoole\Infrastructure\Http\ControllerResponse\JsonControllerResponse;
-use User\Swoole\Infrastructure\Http\Exceptions\HttpException;
 use User\Swoole\Infrastructure\Http\Request\Request;
+use User\Swoole\Infrastructure\Http\Request\Traits\UsesRequestParams;
 use User\Swoole\Infrastructure\Http\Response\JsonResponse;
 use User\Swoole\Infrastructure\Http\Response\Response;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Middleware;
@@ -18,43 +20,61 @@ use User\Swoole\Infrastructure\Http\Routing\Attributes\Route;
 #[Middleware(AuthMiddleware::class)]
 class UserController
 {
+    use UsesRequestParams;
+
     public function __construct(
         private Request $request,
-        private EntityManager $em,
         private JsonControllerResponse $response,
+        private UserTransformer $transformer,
     ) {
     }
 
     #[Route('/user', 'GET')]
-    public function index(): JsonResponse
+    public function index(EntityManager $em): JsonResponse
     {
-        $users = $this->em->getRepository(User::class);
+        $query = $em->getRepository(User::class)->createQueryBuilder('u');
+        $total = $this->applyAll($this->request, $query);
 
-        return $this->response->index($users->findAll(), new UserTransformer);
+        return $this->response->index(
+            $query->getQuery()->getResult(),
+            $this->transformer,
+            $this->request->getPage(),
+            $this->request->getPerPage(),
+            $total,
+        );
     }
 
-    #[Route('/user/{userId}', 'GET')]
-    public function show(string $userId): JsonResponse|Response
+    #[Route('/user/{user}', 'GET')]
+    public function show(User $user): JsonResponse
     {
-        $user = $this->em->getRepository(User::class)->find($userId);
-
-        if (!$user) {
-            throw new HttpException('User not found', 404);
-        }
-
         return $this->response->show($user, new UserTransformer);
     }
 
     #[Route('/user', 'POST')]
-    public function store(): Response
+    public function store(CreateUser $action, UserCreateData $data): JsonResponse
     {
-        $user = new User();
-        $user->setEmail($this->request->get('email'));
-        $user->setPassword($this->request->get('password'));
+        return $this->response->show($action->handle($data), $this->transformer, 201);
+    }
 
-        $this->em->persist($user);
-        $this->em->flush();
+    #[Route('/user/{user}', 'PUT')]
+    public function update(User $user, UserCreateData $data, EntityManager $em): JsonResponse
+    {
+        if ($data->password) {
+            $user->setPassword(password_hash($data->password, PASSWORD_BCRYPT));
+        }
 
-        return new Response(201);
+        $em->persist($user);
+        $em->flush();
+
+        return $this->response->show($user, new UserTransformer, 202);
+    }
+
+    #[Route('/user/{user}', 'DELETE')]
+    public function destroy(User $user, EntityManager $em): Response
+    {
+        $em->remove($user);
+        $em->flush();
+
+        return new Response(204);
     }
 }

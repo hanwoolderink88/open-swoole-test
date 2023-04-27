@@ -13,6 +13,12 @@
             "email": "h.woolderink@emendis.nl"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "git@github.com:hanwoolderink88/data.git"
+        }
+    ],
     "require": {
         "nyholm/psr7": "^1.6",
         "symfony/routing": "^6.2",
@@ -21,7 +27,8 @@
         "mtdowling/jmespath.php": "^2.6",
         "haydenpierce/class-finder": "^0.5.1",
         "doctrine/orm": "^2.14",
-        "symfony/cache": "^6.2"
+        "symfony/cache": "^6.2",
+        "hanwoolderink/data": "dev-develop"
     },
     "require-dev": {
         "swoole/ide-helper": "^5.0"

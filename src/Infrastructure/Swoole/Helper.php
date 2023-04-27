@@ -86,9 +86,9 @@ class Helper
     {
         $request = $app->make(Request::class);
 
-        return $this->getTime() . 'ms '
+        return str_pad((string)$this->getTime(), 4, ' ', STR_PAD_LEFT) . 'ms '
             . $response->getStatusCode() . ' '
-            . $request->getMethod() . '  '
+            . $request->getMethod() . ' '
             . $request->getUri()->getPath() . PHP_EOL;
     }
 }

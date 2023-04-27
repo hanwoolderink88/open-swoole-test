@@ -8,17 +8,26 @@ use User\Swoole\Infrastructure\View\TransformerInterface;
 
 class JsonControllerResponse
 {
-    public function index(array $data, TransformerInterface $transformer): JsonResponse
-    {
+    public function index(
+        array $data,
+        TransformerInterface $transformer,
+        int $page,
+        int $perPage,
+        int $total,
+    ): JsonResponse {
         return new JsonResponse([
             'meta' => [
-                'count' => count($data),
+                'items' => count($data),
+                'page' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'totalPages' => (int) ceil($total / $perPage),
             ],
             'data' => array_map(fn(mixed $item) => $transformer->transform($item), $data),
         ]);
     }
 
-    public function show(mixed $data, TransformerInterface $transformer): JsonResponse
+    public function show(mixed $data, TransformerInterface $transformer, int $status = 200): JsonResponse
     {
         return new JsonResponse([
             'meta' => [],
