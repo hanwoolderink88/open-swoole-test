@@ -1,47 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace User\Swoole\Infrastructure\Http\Routing;
+namespace User\Swoole\Infrastructure\Modules\Traits;
 
 use HaydenPierce\ClassFinder\ClassFinder;
 use ReflectionClass;
 use ReflectionMethod;
-use Symfony\Component\Routing\RouteCollection;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Middleware as MiddlewareAttribute;
 use User\Swoole\Infrastructure\Http\Routing\Attributes\Route as RouteAttribute;
+use User\Swoole\Infrastructure\Http\Routing\Router;
 
-class RouterFactory
+trait UsesAttributeRouting
 {
-    private Router $router;
-
-    public function __construct()
+    private function initRoutesFromController(Router $router, string $controllerNamespace): void
     {
-    }
+        $routes = [];
 
-    public static function create(): Router
-    {
-        $router = new Router();
-        $router->setRoutes(new RouteCollection());
-
-        $factory = new static();
-        $factory->setRouter($router);
-
-        $factory->initRoutes();
-
-        return $router;
-    }
-
-    private function initRoutes(): void
-    {
-        $this->initRoutesFromController();
-    }
-
-    private function initRoutesFromController(): void
-    {
         ClassFinder::disablePSR4Vendors();
-        // todo: config..
-        $contollerNamespace = 'User\Swoole\Domain\Controllers';
-        $classes = ClassFinder::getClassesInNamespace($contollerNamespace, ClassFinder::RECURSIVE_MODE);
+        $classes = ClassFinder::getClassesInNamespace($controllerNamespace, ClassFinder::RECURSIVE_MODE);
 
         foreach ($classes as $class) {
             $reflectionClass = new ReflectionClass($class);
@@ -60,7 +36,7 @@ class RouterFactory
 
                 $controller = [$class, $method->getName()];
 
-                $route = $this->router->addRoute($routeAttribute->method, $routeAttribute->path, $controller);
+                $route = $router->addRoute($routeAttribute->method, $routeAttribute->path, $controller);
 
                 $methodMiddleWares = $method->getAttributes(MiddlewareAttribute::class);
 
@@ -73,10 +49,5 @@ class RouterFactory
                 }
             }
         }
-    }
-
-    private function setRouter(Router $router): void
-    {
-        $this->router = $router;
     }
 }

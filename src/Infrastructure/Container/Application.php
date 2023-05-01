@@ -25,8 +25,6 @@ class Application extends Container
     public function setBasePath(string $basePath): void
     {
         $this->basePath = $basePath;
-
-
     }
 
     public function getBasePath(): string
